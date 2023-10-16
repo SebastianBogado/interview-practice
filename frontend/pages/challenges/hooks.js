@@ -1,4 +1,4 @@
-import { UseIntervalExample } from './implementations/hooks';
+import { UseIntervalExample, UseDebounceExample } from './implementations/hooks';
 
 export default function Hooks() {
   return(
@@ -11,6 +11,7 @@ export default function Hooks() {
         <li>Build a useDebounce hook. See Documentation [here](https://github.com/streamich/react-use/blob/master/docs/useDebounce.md)</li>
       </ol>
       <UseIntervalExample />
+      <UseDebounceExample />
     </>
   )
 }

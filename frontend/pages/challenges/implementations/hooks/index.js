@@ -1,1 +1,1 @@
-export { UseIntervalExample } from './examples';
+export { UseIntervalExample, UseDebounceExample } from './examples';
