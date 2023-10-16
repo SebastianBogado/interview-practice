@@ -1,3 +1,5 @@
+import SudokuChallengeImplementation from './implementations/sudoku'
+
 export default function Sudoku() {
   return(
     <>
@@ -10,9 +12,10 @@ export default function Sudoku() {
         <li>Each sub-grid can only have digits from 1-9, and digits cannot be repeated</li>
         <li>Interactions
           The user should be able to put a number 1-9 as long as it does not violate rule #2
-          The use should be able to clear the board
+          The user should be able to clear the board
         </li>
       </ol>
+      <SudokuChallengeImplementation />
     </>
   )
 }

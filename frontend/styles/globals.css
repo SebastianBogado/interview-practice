@@ -1,0 +1,69 @@
+:root {
+    font-family: sans-serif;
+}
+
+#sudoku {
+    .message {
+        height: 30px;
+    }
+    .error {
+        color: red;
+    }
+    .win {
+        color: green;
+    }
+
+    .grid {
+        --cell-width: 30px;
+        --cell-height: 30px;
+        --subgrid-size: 3;
+
+        width: calc(var(--cell-width) * (var(--subgrid-size) *  var(--subgrid-size)));
+        height: calc(var(--cell-height) * (var(--subgrid-size) *  var(--subgrid-size)));
+        border: 1px solid grey;
+        .row {
+            height: var(--cell-height);
+            width: 100%;
+            box-sizing: border-box;
+            border-bottom: 1px solid grey;
+        }
+        .row:nth-child(3n) {
+            border-bottom: 2px solid black;
+        }
+        .row:last-child {
+            border: none;
+        }
+
+        .column {
+            width: var(--cell-width);
+            height: 100%;
+            box-sizing: border-box;
+            border-right: 1px solid grey;
+            display: inline-block;
+        }
+        .column:nth-child(3n) {
+            border-right: 2px solid black;
+        }
+        .column:last-child {
+            border: none;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            border: none;
+            outline: none;
+            font-size: 28px;
+            line-height: 28px;
+            text-align: center;
+            caret-color: transparent;
+            cursor: pointer;
+        }
+        .cell.related {
+            background-color: beige;
+        }
+        .cell:focus {
+            background-color: wheat;
+        }
+    }
+}
