@@ -1,0 +1,1 @@
+export { UseIntervalExample } from './examples';
