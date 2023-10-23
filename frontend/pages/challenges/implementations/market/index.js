@@ -69,7 +69,7 @@ export default function MarketChallengeImplementation() {
 
   return (
     <div id="market">
-      <h2>Stock exchange!</h2>
+      <h2>💰 Stock exchange 💰</h2>
       <CreateOrderForm validSymbols={orderSymbols} createOrder={createOrder} />
       <div className="best-offers">
         <h3>Best offers</h3>
