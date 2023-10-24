@@ -1,3 +1,5 @@
+import SignupChallengeImplementation from './implementations/signup';
+
 export default function SignupForm() {
   return(
     <>
@@ -6,6 +8,7 @@ export default function SignupForm() {
       </h1>
       <p>
       Build a user Signup form in React with the following features. 
+      </p>
 
       <ol>
         <li>An email and a password input</li>
@@ -24,7 +27,7 @@ export default function SignupForm() {
         </li>
         <li>Basic aesthetics with pure CSS</li>
       </ol>
-      </p>
+      <SignupChallengeImplementation />
     </>
   )
 }

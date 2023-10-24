@@ -68,17 +68,10 @@
     }
 }
 
-#market {
-    .createOrderForm {
-        border: 1px solid black;
-    }
-    .field {
-        
-    }
+.form {
     .field.has-error {
         .error {
             color: red;
         }
     }
-
 }

@@ -31,7 +31,7 @@ export function Input({ field, ...inputProps }) {
 }
 
 export function Radio({ field, value, label }) {
-  const id = useId("radio");
+  const id = useId();
   const [model] = useContext(FormContext);
   const radioProps = {
     id,
