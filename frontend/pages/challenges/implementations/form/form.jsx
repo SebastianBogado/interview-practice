@@ -32,19 +32,59 @@ export function Input({ field, ...inputProps }) {
 
 export function Radio({ field, value, label }) {
   const id = useId();
-  const [model] = useContext(FormContext);
+  const [model, , onInputChange] = useContext(FormContext);
+  const checked = model[field] === value;
+  const onChange = useCallback((e) => {
+    return onInputChange(field)(checked ? '' : e.target.value);
+  }, [onInputChange, field, model[field], checked]);
+
   const radioProps = {
     id,
-    field,
+    name: field,
     type: "radio",
     value,
-    checked: model[field] === value,
+    checked,
+    onChange,
+    onClick: onChange,
   };
 
   return (
     <>
-      <Input {...radioProps} />
-      <label for={id}>{label}</label>
+      <input {...radioProps} />
+      <label htmlFor={id}>{label}</label>
+    </>
+  );
+}
+
+export function Checkbox({ field, value, label }) {
+  const id = useId();
+  const [model, , onInputChange] = useContext(FormContext);
+  const checked = model[field].includes(value);
+  const onChange = useCallback((e) => {
+    const selectedVal = e.target.value;
+    const selectedValues = [...model[field]];
+    if (checked) {
+      selectedValues.splice(selectedValues.indexOf(selectedVal), 1);
+    } else {
+      selectedValues.push(selectedVal);
+    }
+
+    return onInputChange(field)(selectedValues);
+  }, [onInputChange, field, model[field], checked]);
+
+  const checkboxProps = {
+    id,
+    name: field,
+    type: "checkbox",
+    value,
+    checked,
+    onChange,
+  };
+
+  return (
+    <>
+      <input {...checkboxProps} />
+      <label htmlFor={id}>{label}</label>
     </>
   );
 }
@@ -84,7 +124,7 @@ export function Field({ field, label, children }) {
   const error = errors[field];
   return (
     <div className={`field${error ? " has-error": ""}`}>
-      <label htmlFor={field}>{label}: </label>
+      <label htmlFor={field}>{label}</label>
       {children}
       {error && <p className="error">{error}</p>}
     </div>

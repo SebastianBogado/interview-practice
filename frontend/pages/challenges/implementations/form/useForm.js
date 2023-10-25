@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { isEmpty } from './utils';
 
-export default function useForm(modelDefinition, validations, onSubmit) {
+export default function useForm(modelDefinition, validations, onSubmit, onValidationFailed) {
   const [model, setModel] = useState(modelDefinition);
   const [errors, setErrors] = useState({});
 
@@ -17,6 +17,8 @@ export default function useForm(modelDefinition, validations, onSubmit) {
 
     if (isEmpty(validationErrors)) {
       onSubmit(model);
+    } else {
+      onValidationFailed(model, validationErrors);
     }
     setErrors(validationErrors);
   }
