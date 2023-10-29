@@ -77,7 +77,26 @@
 }
 
 #file-tree-viewer {
-    .conteent {
-        padding-left: 10px;
+    width: 300px;
+    font-family: monospace;
+    .folder,.file {
+        cursor: pointer;
+        
+    }
+    .folder:hover {
+        background-color: aquamarine;
+    }
+    .file:hover {
+        background-color: bisque;
+        .size {
+            /* display: inline-block; */
+        }
+    }
+    .icon {
+        margin: 0 0.25em;
+    }
+    .size {
+        /* display: none; */
+        color: grey;
     }
 }
