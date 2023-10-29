@@ -75,3 +75,9 @@
         }
     }
 }
+
+#file-tree-viewer {
+    .conteent {
+        padding-left: 10px;
+    }
+}
