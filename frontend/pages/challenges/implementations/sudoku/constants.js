@@ -1,6 +1,6 @@
 export const defaultSubgridSize = 3;
 export const defaultGridSize = defaultSubgridSize * defaultSubgridSize;
-const initializeGrid = (gridSize = defaultGridSize) => Array(gridSize).fill(Array(gridSize).fill(""));
+const initializeGrid = (gridSize = defaultGridSize) => Array(gridSize).fill().map(() => Array(gridSize).fill(""));
 export const emptyGrid = initializeGrid();
 export const sudoku1 = [
   [" ", " ", " ",/**/ "7", "2", "3",/**/ "4", "6", " "],
