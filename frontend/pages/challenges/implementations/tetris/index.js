@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import useInterval from '../hooks/useInterval';
 
 const status = {
@@ -16,24 +16,174 @@ const level = {
   objective: 20000,
 };
 
+const orientations = {
+  NORTH: {
+    id: 'NORTH',
+  },
+  WEST: {
+    id: 'WEST',
+  },
+  SOUTH: {
+    id: 'SOUTH',
+  },
+  EAST: {
+    id: 'EAST',
+  },
+};
+orientations.NORTH.next = orientations.EAST;
+orientations.NORTH.prev = orientations.WEST;
 
-const pieceShapes = {
-  SQUARE: [
-    { x: 0, y: 0}, { x: 1, y: 0},
-    { x: 0, y: 1}, { x: 1, y: 1},
-  ],
-  DOT: [
-    { x: 0, y: 0},
-  ],
-  LINE: [
-    { x: 0, y: 0},
-    { x: 0, y: 1},
-    { x: 0, y: 2},
-    { x: 0, y: 3},
-  ],
+orientations.EAST.next = orientations.SOUTH;
+orientations.EAST.prev = orientations.NORTH;
+
+orientations.SOUTH.next = orientations.WEST;
+orientations.SOUTH.prev = orientations.EAST;
+
+orientations.WEST.next = orientations.NORTH;
+orientations.WEST.prev = orientations.SOUTH;
+
+const pieceShapesAndOrientation = {
+  SQUARE: {
+    [orientations.NORTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+    [orientations.EAST.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+    [orientations.SOUTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+    [orientations.WEST.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+  },
+  LINE: {
+    [orientations.NORTH.id]: [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+      { x: 0, y: 3 },
+    ],
+    [orientations.EAST.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 },
+    ],
+    [orientations.SOUTH.id]: [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+      { x: 0, y: 3 },
+    ],
+    [orientations.WEST.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 3, y: 0 },
+    ],
+  },
+  T: {
+    [orientations.NORTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, 
+                      { x: 1, y: 1 },
+    ],
+    [orientations.EAST.id]: [
+                      { x: 0, y: 0 },
+      { x:-1, y: 1 }, { x: 0, y: 1 },
+                      { x: 0, y: 2 },
+    ],
+    [orientations.SOUTH.id]: [
+                      { x: 0, y: 0 },
+      { x:-1, y: 1 }, { x: 0, y: 1 }, { x: 1, y: 1 }, 
+    ],
+    [orientations.WEST.id]: [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+      { x: 0, y: 2 },
+    ],
+  },
+  L: {
+    [orientations.NORTH.id]: [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: 2 }, { x: 1, y: 2 },
+    ],
+    [orientations.EAST.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, 
+      { x: 0, y: 1 },
+    ],
+    [orientations.SOUTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, 
+                      { x: 1, y: 1 },
+                      { x: 1, y: 2 },
+    ],
+    [orientations.WEST.id]: [
+                                      { x: 0, y: 0 },
+      { x:-2, y: 1 }, { x:-1, y: 1 }, { x: 0, y: 1 }, 
+    ],
+  },
+  MIRROR_L: {
+    [orientations.NORTH.id]: [
+                      { x: 1, y: 0 },
+                      { x: 1, y: 1 },
+      { x: 0, y: 2 }, { x: 1, y: 2 },
+    ],
+    [orientations.EAST.id]: [
+      { x: 0, y: 0 },
+      { x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }, 
+    ],
+    [orientations.SOUTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, 
+      { x: 0, y: 1 },
+      { x: 0, y: 2 },
+    ],
+    [orientations.WEST.id]: [
+      { x:-2, y: 0 }, { x:-1, y: 0 }, { x: 0, y: 0 }, 
+                                      { x: 0, y: 1 },
+    ],
+  },
+  SKEW: {
+    [orientations.NORTH.id]: [
+                      { x: 1, y: 0 }, { x: 2, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+    [orientations.EAST.id]: [
+      { x: 0, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+                      { x: 1, y: 2 },
+    ],
+    [orientations.SOUTH.id]: [
+                      { x: 1, y: 0 }, { x: 2, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+    ],
+    [orientations.WEST.id]: [
+      { x: 0, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+                      { x: 1, y: 2 },
+    ],
+  },
+  MIRROR_SKEW: {
+    [orientations.NORTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, 
+                      { x: 1, y: 1 }, { x: 2, y: 1 },
+    ],
+    [orientations.EAST.id]: [
+                      { x: 1, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+      { x: 0, y: 2 },
+    ],
+    [orientations.SOUTH.id]: [
+      { x: 0, y: 0 }, { x: 1, y: 0 }, 
+                      { x: 1, y: 1 }, { x: 2, y: 1 },
+    ],
+    [orientations.WEST.id]: [
+                      { x: 1, y: 0 }, 
+      { x: 0, y: 1 }, { x: 1, y: 1 },
+      { x: 0, y: 2 },
+    ],
+  },
 }
-const pieceShapesNames = Object.keys(pieceShapes);
-const colors = ['red', 'green', 'yellow', 'blue'];
+const pieceShapesNames = Object.keys(pieceShapesAndOrientation);
+const colors = ['red', 'green', 'yellow', 'blue', 'teal'];
 
 function getRandom(array) {
   return array[Math.floor(Math.random() * array.length)];
@@ -41,7 +191,8 @@ function getRandom(array) {
 
 function createRandomPiece() {
   return {
-    shape: pieceShapes[getRandom(pieceShapesNames)],
+    shape: getRandom(pieceShapesNames),
+    orientation: orientations.NORTH,
     color: getRandom(colors),
   }
 }
@@ -82,42 +233,71 @@ function getNewPositionForPiece(piece, direction) {
     };
   }
 }
+function getOrientedShape(piece) {
+  return pieceShapesAndOrientation[piece.shape][piece.orientation.id];
+}
 
-function pieceHasReachedTheBottom(cellsById, piece, newPosition) {
-  return piece.shape.some((cell) => {
-    const cellPositionX = cell.x + newPosition.x;
-    const cellPositionY = newPosition.y - cell.y;
-    return cellPositionY < 0 || cellsById[positionToId(cellPositionX, cellPositionY)].color;
+function pieceHasReachedSomeLimit(cellsById, piece, newPosition) {
+  return getOrientedShape(piece).map(positionShapeCellInGrid(newPosition)).some((cell) => {
+    return cell.y < 0 || cell.x < 0 || cell.x >= 15 || cellsById[positionToId(cell.x, cell.y)].color;
   });
 }
 
+function getLivePiece(engine) {
+  if (engine.livePiece) return { ...engine.livePiece };
+
+  const { map } = engine;
+  const piece = createRandomPiece();
+  piece.position = {
+    x: Math.floor(map.width/2),
+    y: map.height - 1,
+  };
+
+  return piece;
+}
 
 function tick(engine) {
-  const { livePiece, map } = engine;
+  let livePiece = getLivePiece(engine);
+  const { map } = engine;
   const { cellsById } = map;
-  let newLivePiece;
-  if (!livePiece) {
-    newLivePiece = createRandomPiece();
-    newLivePiece.position = {
-      x: Math.floor(map.width/2),
-      y: map.height,
-    };
-  } else {
-    newLivePiece = {
-      ...livePiece,
-    };
-  }
 
   let newCellsById;
-  let livePieceHasReachedTheBottom = false;
-  if (newLivePiece) {
-    const newPosition = getNewPositionForPiece(newLivePiece, directions.DOWN);
-    if (pieceHasReachedTheBottom(cellsById, newLivePiece, newPosition)) {
-      newCellsById = renderPieceIntoMap(newLivePiece, map.cellsById);
-      livePieceHasReachedTheBottom = true;
-    } else {
-      newLivePiece.position = newPosition;
+
+  // check if a live piece exists
+  // if yes
+    // try to move it down
+    // if piece has reached the bottom
+      // render live piece into map
+      // remove completed lines
+    // else 
+      // assign new position to live piece
+  // else 
+    // create live piece
+      // if piece has reached the bottom
+        // render live piece into map
+        // game over
+
+  if (pieceHasReachedSomeLimit(cellsById, livePiece, livePiece.position)) {
+    newCellsById = renderPieceIntoMap(livePiece, map.cellsById);
+    livePiece = null;
+    return {
+      ...engine,
+      status: status.GAME_OVER,
+      map: {
+        ...map,
+        cellsById: newCellsById ? newCellsById : cellsById,
+      },
+      livePiece,
     }
+  }
+
+  // piece has room to move
+  const newLivePiecePosition = getNewPositionForPiece(livePiece, directions.DOWN);
+  if (pieceHasReachedSomeLimit(cellsById, livePiece, newLivePiecePosition)) {
+    newCellsById = renderPieceIntoMap(livePiece, map.cellsById);
+    livePiece = null;
+  } else {
+    livePiece.position = newLivePiecePosition;
   }
 
   return {
@@ -126,9 +306,7 @@ function tick(engine) {
       ...map,
       cellsById: newCellsById ? newCellsById : cellsById,
     },
-    livePiece: livePieceHasReachedTheBottom ? null : {
-      ...newLivePiece,
-    },
+    livePiece,
   }
 }
 
@@ -160,6 +338,14 @@ function initializeMap(width, height) {
   };
 }
 
+function positionShapeCellInGrid(position) {
+  return function (cell) {
+    return {
+      x: cell.x + position.x,
+      y: position.y - cell.y,
+    };
+  };
+}
 
 function cloneMatrix(grid) {
   return [...grid.map((row) => [...row])]
@@ -168,8 +354,8 @@ function renderPieceIntoMap(piece, cellsById) {
   if (!piece) return cellsById;
 
   const newCellsById = { ...cellsById };
-  piece.shape.forEach((cell) => {
-    const cellId = positionToId(cell.x + piece.position.x, piece.position.y - cell.y);
+  getOrientedShape(piece).map(positionShapeCellInGrid(piece.position)).forEach((cell) => {
+    const cellId = positionToId(cell.x, cell.y);
     newCellsById[cellId] = {
       ...newCellsById[cellId],
       color: piece.color,
@@ -234,17 +420,94 @@ function Cell({ cell }) {
   );
 }
 
+function handleKeys(e) {
+  return function (engine) {
+    console.log(e.key)
+
+    let newLivePiecePosition;
+    switch (e.key) {
+      case 'p': 
+        return {
+          ...engine,
+          status: engine.status === status.RUNNING ? status.PAUSED : status.RUNNING,
+        }
+        break;
+      case 'ArrowLeft': 
+        if (!engine.livePiece) return engine;
+        newLivePiecePosition = getNewPositionForPiece(engine.livePiece, directions.LEFT);
+        if (pieceHasReachedSomeLimit(engine.map.cellsById, engine.livePiece, newLivePiecePosition)) return engine;
+        return {
+          ...engine,
+          livePiece: {
+            ...engine.livePiece,
+            position: newLivePiecePosition,
+          }
+        }
+        break;
+      case 'ArrowRight':
+        if (!engine.livePiece) return engine;
+        newLivePiecePosition = getNewPositionForPiece(engine.livePiece, directions.RIGHT);
+        if (pieceHasReachedSomeLimit(engine.map.cellsById, engine.livePiece, newLivePiecePosition)) return engine;
+        return {
+          ...engine,
+          livePiece: {
+            ...engine.livePiece,
+            position: newLivePiecePosition,
+          }
+        }
+        break;
+      case 'ArrowUp':
+        if (!engine.livePiece) return engine;
+        return {
+          ...engine,
+          livePiece: {
+            ...engine.livePiece,
+            orientation: engine.livePiece.orientation.next,
+          },
+        }
+        break;
+      case 'ArrowDown': 
+        if (!engine.livePiece) return engine;
+        newLivePiecePosition = getNewPositionForPiece(engine.livePiece, directions.DOWN);
+        if (pieceHasReachedSomeLimit(engine.map.cellsById, engine.livePiece, newLivePiecePosition)) return engine;
+        return {
+          ...engine,
+          livePiece: {
+            ...engine.livePiece,
+            position: newLivePiecePosition,
+          }
+        }
+        break;
+      default: 
+        break;
+    }
+    return engine;
+  }
+}
+
 export default function Tetris() {
-  const [engine, setEngine] = useState({ map: initializeMap(15, 25), tick: 100 });
+  const [engine, setEngine] = useState({ 
+    map: initializeMap(15, 25), 
+    tick: 300,
+    status: status.RUNNING,
+  });
 
 
   useInterval(() => {
     setEngine(tick);
-  }, engine.tick);
+  }, engine.status === status.RUNNING ? engine.tick : null);
+
+  const handleKeysCallback = useCallback((e) => setEngine(handleKeys(e)), [setEngine]);
+
+  useEffect(() => {
+    window.addEventListener('keyup', handleKeysCallback);
+    () => window.removeEventListener('keyup', handleKeysCallback);
+  }, [handleKeysCallback])
 
   return (
     <div id="tetris">
       <Map map={engine.map} livePiece={engine.livePiece} />
+      {engine.status}
       <button onClick={() => setEngine(tick)}>tick</button>
     </div>
   );
