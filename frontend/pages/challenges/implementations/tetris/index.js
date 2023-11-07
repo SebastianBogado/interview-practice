@@ -183,6 +183,7 @@ const pieceShapesAndOrientation = {
   },
 }
 const pieceShapesNames = Object.keys(pieceShapesAndOrientation);
+// const pieceShapesNames = ['LINE'];
 const colors = ['red', 'green', 'yellow', 'blue', 'teal'];
 
 function getRandom(array) {
@@ -256,12 +257,72 @@ function getLivePiece(engine) {
   return piece;
 }
 
+function getOccupiedRows(piece) {
+  const pieceInGrid = getOrientedShape(piece).map(positionShapeCellInGrid(piece.position));
+  const rows = pieceInGrid.map((cellPosition) => cellPosition.y);
+  return [...new Set(rows)].sort();
+}
+
+function getRowCells(map, row) {
+  const cols = []
+  for (let i = 0; i < map.width; i++) {
+    cols.push(i);
+  }
+
+  return cols.map((col) => {
+    const cellId = positionToId(col, row);
+    return map.cellsById[cellId];
+  });
+}
+
+function isRowComplete(map, row) {
+  return getRowCells(map, row).every((cell) => !!cell.color);
+}
+
+function getCompletedRows(map, rowsToEvaluate) {
+  return rowsToEvaluate.filter((row) => isRowComplete(map, row));
+}
+
+function shiftDownRow(map, row) {
+  const newCellsById = { ...map.cellsById };
+  let currentRowCells = getRowCells(map, row);
+  let nextRowCells;
+
+  for (let j = row + 1; j < map.height; j++) {
+    nextRowCells = getRowCells(map, j);
+    currentRowCells.forEach((cell, i) => {
+      newCellsById[cell.id] = {
+        ...newCellsById[cell.id],
+        color: nextRowCells[i].color,
+      };
+    });
+    currentRowCells = nextRowCells;
+  }
+
+  nextRowCells.forEach((cell, i) => {
+    newCellsById[cell.id] = {
+      ...newCellsById[cell.id],
+      color: null,
+    };
+  });
+
+  return {
+    ...map,
+    cellsById: newCellsById,
+  };
+}
+
+function clearThisManyRowsFromRow(map, rowsToClear, fromRow) {
+  return Array(rowsToClear).fill(fromRow).reduce(shiftDownRow, map);
+}
+
 function tick(engine) {
   let livePiece = getLivePiece(engine);
   const { map } = engine;
   const { cellsById } = map;
 
   let newCellsById;
+  let points = 0;
 
   // check if a live piece exists
   // if yes
@@ -295,6 +356,19 @@ function tick(engine) {
   const newLivePiecePosition = getNewPositionForPiece(livePiece, directions.DOWN);
   if (pieceHasReachedSomeLimit(cellsById, livePiece, newLivePiecePosition)) {
     newCellsById = renderPieceIntoMap(livePiece, map.cellsById);
+    const rowsToEvaluate = getOccupiedRows(livePiece);
+    const completedRows = getCompletedRows({
+      ...map,
+      cellsById: newCellsById,
+    }, rowsToEvaluate);
+    
+    points = completedRows.length * 100;
+
+    newCellsById = clearThisManyRowsFromRow({
+      ...map,
+      cellsById: newCellsById,
+    }, completedRows.length, completedRows[0]).cellsById;
+    
     livePiece = null;
   } else {
     livePiece.position = newLivePiecePosition;
@@ -307,6 +381,7 @@ function tick(engine) {
       cellsById: newCellsById ? newCellsById : cellsById,
     },
     livePiece,
+    score: engine.score + points,
   }
 }
 
@@ -330,6 +405,25 @@ function initializeMap(width, height) {
       cellsById[cell.id] = cell;
     }
   }
+
+  // to initialize grid with first row almost completed, with a whole in the middle
+  // for debugging purposes
+  // for (let k = 0; k < width; k++) {
+  //   cellsById[positionToId(k, 0)].color = 'green';
+  // }
+  // cellsById[positionToId(Math.floor(width/2), 0)].color = null;
+  // for (let k = 0; k < width; k++) {
+  //   cellsById[positionToId(k, 1)].color = 'green';
+  // }
+  // cellsById[positionToId(Math.floor(width/2), 1)].color = null;
+  // for (let k = 0; k < width; k++) {
+  //   cellsById[positionToId(k, 2)].color = 'green';
+  // }
+  // cellsById[positionToId(Math.floor(width/2), 2)].color = null;
+  // for (let k = 0; k < width; k++) {
+  //   cellsById[positionToId(k, 3)].color = 'green';
+  // }
+  // cellsById[positionToId(Math.floor(width/2), 3)].color = null;
 
   return {
     width,
@@ -422,8 +516,6 @@ function Cell({ cell }) {
 
 function handleKeys(e) {
   return function (engine) {
-    console.log(e.key)
-
     let newLivePiecePosition;
     switch (e.key) {
       case 'p': 
@@ -490,6 +582,7 @@ export default function Tetris() {
     map: initializeMap(15, 25), 
     tick: 300,
     status: status.RUNNING,
+    score: 0,
   });
 
 
@@ -507,7 +600,8 @@ export default function Tetris() {
   return (
     <div id="tetris">
       <Map map={engine.map} livePiece={engine.livePiece} />
-      {engine.status}
+      <p>Status: {engine.status}</p>
+      <p>Score: {engine.score}</p>
       <button onClick={() => setEngine(tick)}>tick</button>
     </div>
   );
